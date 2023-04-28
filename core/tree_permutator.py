@@ -48,3 +48,15 @@ def build_new_trees(subtrees_permuted: list[list[Tree]], tree: Tree, limit: int)
             new_final_trees.append(new_tree)
 
     return new_final_trees[:limit]
+
+
+def build_paraphrases(tree: Tree, label: str, limit: int) -> dict:
+    parent_trees = find_parent(tree, label)
+    children_permutations = [
+        create_subtrees_permutation(subtree, label) for subtree in parent_trees.values()
+    ]
+    new_trees = build_new_trees(children_permutations, tree, limit)
+
+    trees_to_str = [" ".join(str(tree).split()) for tree in new_trees]
+    tree_dict = {"paraphrases": [{"tree": tree} for tree in trees_to_str]}
+    return tree_dict
