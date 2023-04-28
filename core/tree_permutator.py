@@ -1,5 +1,5 @@
 from copy import deepcopy
-from itertools import permutations
+from itertools import permutations, product
 
 from nltk import Tree
 
@@ -31,28 +31,28 @@ def create_subtrees_permutation(subtree: Tree, label: str) -> list:
 
     subtrees_permuted = []
     for perm in possible_permutations:
-
         new_tree = deepcopy(subtree)
         for child, pos in zip(perm, position_and_subtree.keys()):
             new_tree[pos] = child
-
         subtrees_permuted.append(new_tree)
 
     return subtrees_permuted
 
 
 def build_new_trees(
-        subtrees_permuted: list[list[Tree]],
+        subtrees_permuted: list[tuple[Tree]],
         tree: Tree,
+        label: str,
         limit: int
 ) -> list:
     new_final_trees = []
-    parent_trees = find_parent(tree, "NP").keys()
-    for pos, subtree_permuted in zip(parent_trees, subtrees_permuted):
-        for subtree in subtree_permuted:
-            new_tree = deepcopy(tree)
-            new_tree[pos] = subtree
-            new_final_trees.append(new_tree)
+    parent_trees = find_parent(tree, label).keys()
+
+    for subtree_permuted in subtrees_permuted:
+        new_tree = deepcopy(tree)
+        for pos, sub in zip(parent_trees, subtree_permuted):
+            new_tree[pos] = sub
+        new_final_trees.append(new_tree)
 
     return new_final_trees[:limit]
 
@@ -64,7 +64,10 @@ def build_paraphrases(tree: Tree, label: str, limit: int) -> dict:
         for subtree
         in parent_trees.values()
     ]
-    new_trees = build_new_trees(children_permutations, tree, limit)
+    product_children_permutations = list(product(*children_permutations))
+    new_trees = build_new_trees(
+        product_children_permutations, tree, label, limit
+    )
 
     trees_to_str = [" ".join(str(tree).split()) for tree in new_trees]
     tree_dict = {"paraphrases": [{"tree": tree} for tree in trees_to_str]}
