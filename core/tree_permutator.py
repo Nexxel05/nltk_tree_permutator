@@ -36,3 +36,15 @@ def create_subtrees_permutation(subtree: Tree, label: str) -> list:
         subtrees_permuted.append(new_tree)
 
     return subtrees_permuted
+
+
+def build_new_trees(subtrees_permuted: list[list[Tree]], tree: Tree, limit: int) -> list:
+    new_final_trees = []
+    parent_trees = find_parent(tree, "NP").keys()
+    for pos, subtree_permuted in zip(parent_trees, subtrees_permuted):
+        for subtree in subtree_permuted:
+            new_tree = deepcopy(tree)
+            new_tree[pos] = subtree
+            new_final_trees.append(new_tree)
+
+    return new_final_trees[:limit]
