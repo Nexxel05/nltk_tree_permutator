@@ -5,6 +5,9 @@ from nltk import Tree
 
 
 def find_parent(tree: Tree, label: str) -> dict:
+    """
+    Function finds parents with certain label which has children to be permuted
+    """
     dict_of_parents = {}
     for pos in tree.treepositions():
         if isinstance(tree[pos], Tree) and tree[pos].label() == label:
@@ -16,7 +19,10 @@ def find_parent(tree: Tree, label: str) -> dict:
     return dict_of_parents
 
 
-def create_subtrees_permutation(subtree: Tree, label: str) -> list:
+def create_subtree_permutation(subtree: Tree, label: str) -> list:
+    """
+    Function to create permutation of children with certain label for subtree
+    """
     position_and_subtree = {}
 
     for subtree_pos in subtree.treepositions():
@@ -39,16 +45,32 @@ def create_subtrees_permutation(subtree: Tree, label: str) -> list:
     return subtrees_permuted
 
 
+def subtrees_product_permutations(tree: Tree, label: str):
+    """
+    Function to create product of all subtrees permutations
+    """
+    parent_trees = find_parent(tree, label)
+    children_permutations = [
+        create_subtree_permutation(subtree, label)
+        for subtree
+        in parent_trees.values()
+    ]
+    return list(product(*children_permutations))
+
+
 def build_new_trees(
-        subtrees_permuted: list[tuple[Tree]],
         tree: Tree,
         label: str,
         limit: int
 ) -> list:
+    """
+    Function to build new trees with all permutations based on original tree
+    """
     new_final_trees = []
     parent_trees = find_parent(tree, label).keys()
+    product_permutations = subtrees_product_permutations(tree, label)
 
-    for subtree_permuted in subtrees_permuted:
+    for subtree_permuted in product_permutations:
         new_tree = deepcopy(tree)
         for pos, sub in zip(parent_trees, subtree_permuted):
             new_tree[pos] = sub
@@ -58,16 +80,10 @@ def build_new_trees(
 
 
 def build_paraphrases(tree: Tree, label: str, limit: int) -> dict:
-    parent_trees = find_parent(tree, label)
-    children_permutations = [
-        create_subtrees_permutation(subtree, label)
-        for subtree
-        in parent_trees.values()
-    ]
-    product_children_permutations = list(product(*children_permutations))
-    new_trees = build_new_trees(
-        product_children_permutations, tree, label, limit
-    )
+    """
+    Function to build dict of paraphrases using given tree and label
+    """
+    new_trees = build_new_trees(tree, label, limit)
 
     trees_to_str = [" ".join(str(tree).split()) for tree in new_trees]
     tree_dict = {"paraphrases": [{"tree": tree} for tree in trees_to_str]}
